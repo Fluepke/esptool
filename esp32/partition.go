@@ -263,7 +263,7 @@ type PartitionList []Partition
 func (p PartitionList) String() string {
 	builder := &strings.Builder{}
 	for _, partition := range p {
-		fmt.Println(partition.String())
+		fmt.Fprintln(builder, partition.String())
 	}
 	return builder.String()
 }

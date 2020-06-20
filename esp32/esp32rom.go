@@ -161,7 +161,7 @@ func (e *ESP32ROM) CheckExecuteCommand(command *common.Command, timeout time.Dur
 func (e *ESP32ROM) ChangeBaudrate(newBaudrate uint32) error {
 	e.logger.Printf("Changing baudrate to %d\n", newBaudrate)
 	_, err := e.CheckExecuteCommand(
-		common.NewChangeBaudrateCommand(newBaudrate, e.SerialPort.Config.BaudRate),
+		common.NewChangeBaudrateCommand(newBaudrate, 0), //e.SerialPort.Config.BaudRate),
 		e.defaultTimeout,
 		e.defaultRetries,
 	)

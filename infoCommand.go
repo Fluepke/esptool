@@ -25,6 +25,12 @@ func (d *DeviceInfo) String() string {
 	fmt.Fprintf(builder, "%s: %s\n", bold("Revision"), d.Revision)
 	fmt.Fprintf(builder, "%s: %s\n", bold("MAC"), d.MacAddress)
 	fmt.Fprintf(builder, "%s: %s\n", bold("Features"), strings.Join(d.Features, ", "))
+	fmt.Fprintln(builder, bold("Partition Table"))
+	if d.Partitions != nil {
+		fmt.Fprint(builder, d.Partitions.String())
+	} else {
+		fmt.Fprint(builder, "** invalid **")
+	}
 	return builder.String()
 }
 

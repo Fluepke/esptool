@@ -41,7 +41,7 @@ var (
 	flashReadOffset           = flashReadFlagSet.Uint("flash.offset", 0, "Offset")
 	flashReadSize             = flashReadFlagSet.Uint("flash.size", 0, "Bytes to read")
 	flashReadFile             = flashReadFlagSet.String("flash.file", "", "File to read flash contents into")
-	//flashReadPartitionName		= flashReadFlagSet.String("flash.partition.name", "", "Partition to read")
+	flashReadPartitionName    = flashReadFlagSet.String("flash.partition.name", "", "Partition to read")
 
 	flashWriteFlagSet          = flag.NewFlagSet("writeFlash", flag.ExitOnError)
 	flashWritePort             = flashWriteFlagSet.String("serial.port", "", "Serial port device file")
@@ -51,6 +51,7 @@ var (
 	flashWriteRetries          = flashWriteFlagSet.Uint("serial.connect.retries", 5, "How often to retry connecting")
 	flashWriteOffset           = flashWriteFlagSet.Uint("flash.offset", 0, "Offset")
 	flashWriteFile             = flashWriteFlagSet.String("flash.file", "", "File with data to flash")
+	flashWritePartitionName    = flashWriteFlagSet.String("flash.partition.name", "", "Partition to write")
 
 	cliCommands = []*CliCommand{
 		&CliCommand{
