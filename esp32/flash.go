@@ -140,11 +140,11 @@ func (e *ESP32ROM) WriteFlash(offset uint32, data []byte) error {
 		sent += blockLength
 	}
 
-	_, err = e.CheckExecuteCommand(
-		common.NewFlashEndCommand(true),
-		e.defaultTimeout,
-		e.defaultRetries,
-	)
+	//	_, err = e.CheckExecuteCommand(
+	//		common.NewFlashEndCommand(false),
+	//		e.defaultTimeout,
+	//		e.defaultRetries,
+	//	)
 
 	return err
 }
