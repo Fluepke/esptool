@@ -10,6 +10,8 @@ import (
 )
 
 const version string = "0.1"
+const defaultConnectBaudrate uint = 115200
+const defaultTransferBaudrate uint = 921600
 
 type CliCommand struct {
 	Name        string
@@ -26,16 +28,16 @@ var (
 
 	infoFlagSet          = flag.NewFlagSet("info", flag.ExitOnError)
 	infoPort             = infoFlagSet.String("serial.port", "", "Serial port device file")
-	infoConnectBaudrate  = infoFlagSet.Uint("serial.baudrate.connect", 2000000, "Serial signalling rate during connect phase")
-	infoTransferBaudrate = infoFlagSet.Uint("serial.baudrate.transfer", 500000, "Serial signalling rate during data transfer")
+	infoConnectBaudrate  = infoFlagSet.Uint("serial.baudrate.connect", defaultConnectBaudrate, "Serial signalling rate during connect phase")
+	infoTransferBaudrate = infoFlagSet.Uint("serial.baudrate.transfer", defaultTransferBaudrate, "Serial signalling rate during data transfer")
 	infoTimeout          = infoFlagSet.Duration("serial.connect.timeout", 500*time.Millisecond, "Timeout to wait for chip response upon connecting")
 	infoRetries          = infoFlagSet.Uint("serial.connect.retries", 5, "How often to retry connecting")
 	infoJson             = infoFlagSet.Bool("json", false, "Display chip info in JSON format")
 
 	flashReadFlagSet          = flag.NewFlagSet("readFlash", flag.ExitOnError)
 	flashReadPort             = flashReadFlagSet.String("serial.port", "", "Serial port device file")
-	flashReadConnectBaudrate  = flashReadFlagSet.Uint("serial.baudrate.connect", 2000000, "Serial signalling rate during connect phase")
-	flashReadTransferBaudrate = flashReadFlagSet.Uint("serial.baudrate.transfer", 500000, "Serial signalling rate during data transfer")
+	flashReadConnectBaudrate  = flashReadFlagSet.Uint("serial.baudrate.connect", defaultConnectBaudrate, "Serial signalling rate during connect phase")
+	flashReadTransferBaudrate = flashReadFlagSet.Uint("serial.baudrate.transfer", defaultTransferBaudrate, "Serial signalling rate during data transfer")
 	flashReadTimeout          = flashReadFlagSet.Duration("serial.connect.timeout", 500*time.Millisecond, "Timeout to wait for chip response upon connecting")
 	flashReadRetries          = flashReadFlagSet.Uint("serial.connect.retries", 5, "How often to retry connecting")
 	flashReadOffset           = flashReadFlagSet.Uint("flash.offset", 0, "Offset")
@@ -45,8 +47,8 @@ var (
 
 	flashWriteFlagSet          = flag.NewFlagSet("writeFlash", flag.ExitOnError)
 	flashWritePort             = flashWriteFlagSet.String("serial.port", "", "Serial port device file")
-	flashWriteConnectBaudrate  = flashWriteFlagSet.Uint("serial.baudrate.connect", 2000000, "Serial signalling rate during connect phase")
-	flashWriteTransferBaudrate = flashWriteFlagSet.Uint("serial.baudrate.transfer", 500000, "Serial signalling rate during data transfer")
+	flashWriteConnectBaudrate  = flashWriteFlagSet.Uint("serial.baudrate.connect", defaultConnectBaudrate, "Serial signalling rate during connect phase")
+	flashWriteTransferBaudrate = flashWriteFlagSet.Uint("serial.baudrate.transfer", defaultTransferBaudrate, "Serial signalling rate during data transfer")
 	flashWriteTimeout          = flashWriteFlagSet.Duration("serial.connect.timeout", 500*time.Millisecond, "Timeout to wait for chip response upon connecting")
 	flashWriteRetries          = flashWriteFlagSet.Uint("serial.connect.retries", 5, "How often to retry connecting")
 	flashWriteOffset           = flashWriteFlagSet.Uint("flash.offset", 0, "Offset")
