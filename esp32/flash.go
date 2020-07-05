@@ -2,6 +2,7 @@ package esp32
 
 import (
 	"bytes"
+	"compress/zlib"
 	"fmt"
 	"github.com/fluepke/esptool/common"
 	"time"
@@ -23,12 +24,6 @@ func (e *ESP32ROM) AttachSpiFlash() (err error) {
 	e.logger.Print("Attach SPI flash success")
 	return
 }
-
-// func (e *ESP32ROM) SpiSetParams() (err error) {
-// 	_, err = e.CheckExecuteCommand(
-// 		common.NewSpiSetParamsCommand(
-// 			uint32(0),
-// 			e.Size(
 
 func (e *ESP32ROM) ReadFlash(offset uint32, size uint32) ([]byte, error) {
 	if !e.flashAttached {
@@ -63,41 +58,72 @@ func (e *ESP32ROM) ReadFlash(offset uint32, size uint32) ([]byte, error) {
 	}
 }
 
-func (e *ESP32ROM) WriteFlash(offset uint32, data []byte) error {
+func compressImage(data []byte) ([]byte, error) {
+	var b bytes.Buffer
+
+	w, err := zlib.NewWriterLevel(&b, 9)
+	_, err = w.Write(data)
+	w.Close()
+	return b.Bytes(), err
+}
+
+func (e *ESP32ROM) WriteFlash(offset uint32, data []byte, useCompression bool) (err error) {
 	if !e.flashAttached {
-		err := e.AttachSpiFlash()
+		err = e.AttachSpiFlash()
 		if err != nil {
 			return err
 		}
 	}
 
-	remaining := make([]byte, len(data))
-	copy(remaining, data)
+	var remaining []byte
 
 	numBlocks := (uint32(len(data)) + blockLengthWriteMax - 1) / blockLengthWriteMax
 	e.logger.Print("Start Erase procedure")
-	_, err := e.CheckExecuteCommand(
-		common.NewBeginFlashCommand(
-			uint32(len(data)),
-			uint32(numBlocks),
-			blockLengthWriteMax,
-			offset,
-		),
-		10*time.Second,
-		e.defaultRetries,
-	)
-	e.logger.Print("Begin Flash success.")
+
+	if useCompression {
+		remaining, err = compressImage(data)
+		if err != nil {
+			return err
+		}
+		uncompressedNumBlocks := numBlocks
+		numBlocks = (uint32(len(remaining)) + blockLengthWriteMax - 1) / blockLengthWriteMax
+		e.logger.Printf("Compressed %d bytes to %d bytes. Ration = %.1f", len(data), len(remaining), float64(len(remaining))/float64(len(data)))
+		_, err = e.CheckExecuteCommand(
+			common.NewBeginFlashDeflCommand(
+				uint32(uncompressedNumBlocks)*blockLengthWriteMax,
+				uint32(numBlocks),
+				blockLengthWriteMax,
+				offset,
+			),
+			10*time.Second,
+			e.defaultRetries)
+	} else {
+		remaining = make([]byte, len(data))
+		copy(remaining, data)
+		_, err = e.CheckExecuteCommand(
+			common.NewBeginFlashCommand(
+				uint32(len(data)),
+				uint32(numBlocks),
+				blockLengthWriteMax,
+				offset,
+			),
+			10*time.Second,
+			e.defaultRetries,
+		)
+	}
+
 	e.logger.Printf("Block size is %d, block count is %d", blockLengthWriteMax, numBlocks)
 	if err != nil {
 		return err
 	}
+	e.logger.Print("Begin Flash success.")
 
 	sequence := uint32(0)
 
 	sent := uint32(0)
-	total := uint32(len(data))
+	total := uint32(len(remaining))
 
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(10 * time.Millisecond)
 
 	for {
 		if sent >= total {
@@ -109,27 +135,41 @@ func (e *ESP32ROM) WriteFlash(offset uint32, data []byte) error {
 		if blockLength > blockLengthWriteMax {
 			blockLength = blockLengthWriteMax
 		}
-		block := remaining[sent : sent+blockLength] // TODO we might need to pad the last block
+		block := remaining[sent : sent+blockLength]
 
-		if blockLength < blockLengthWriteMax {
+		if !useCompression && blockLength < blockLengthWriteMax {
 			block = append(block, bytes.Repeat([]byte{0xFF}, int(blockLengthWriteMax-blockLength))...)
 		}
 
 		for retryCount := 0; retryCount < 3; retryCount++ {
 			if retryCount > 0 {
-				e.logger.Printf("Received error while writing to Flash: %s", err.Error())
+				e.logger.Printf("Received error while writing to Flash")
 			}
-			_, err = e.CheckExecuteCommand(
-				common.NewFlashDataCommand(
-					block,
-					sequence,
-				),
-				e.defaultTimeout,
-				e.defaultRetries,
-			)
+			if useCompression {
+				_, err = e.CheckExecuteCommand(
+					common.NewFlashDataDeflCommand(
+						block,
+						sequence,
+					),
+					e.defaultTimeout*100,
+					e.defaultRetries,
+				)
+				if err == nil {
+					break
+				}
+			} else {
+				_, err = e.CheckExecuteCommand(
+					common.NewFlashDataCommand(
+						block,
+						sequence,
+					),
+					e.defaultTimeout,
+					e.defaultRetries,
+				)
 
-			if err == nil {
-				break
+				if err == nil {
+					break
+				}
 			}
 		}
 		if err != nil {

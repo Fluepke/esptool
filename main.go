@@ -52,6 +52,7 @@ var (
 	flashWriteOffset           = flashWriteFlagSet.Uint("flash.offset", 0, "Offset")
 	flashWriteFile             = flashWriteFlagSet.String("flash.file", "", "File with data to flash")
 	flashWritePartitionName    = flashWriteFlagSet.String("flash.partition.name", "", "Partition to write")
+	flashWriteCompress         = flashWriteFlagSet.Bool("flash.compress", true, "Use compression for transfer")
 
 	cliCommands = []*CliCommand{
 		&CliCommand{
@@ -109,9 +110,9 @@ var (
 					return err
 				}
 
-				err = esp32.WriteFlash(uint32(*flashWriteOffset), contents)
+				err = esp32.WriteFlash(uint32(*flashWriteOffset), contents, *flashWriteCompress)
 				if err != nil {
-					return err
+					panic(err)
 				}
 				logger.Print("Done")
 				return nil

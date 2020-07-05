@@ -88,6 +88,15 @@ func NewBeginFlashCommand(eraseSize uint32, numBlocks uint32, blockSize uint32, 
 	return NewCommand(OpcodeFlashBegin, payload)
 }
 
+func NewBeginFlashDeflCommand(eraseSize uint32, numBlocks uint32, blockSize uint32, offset uint32) *Command {
+	payload := Uint32ToBytes(eraseSize)
+	payload = append(payload, Uint32ToBytes(numBlocks)...)
+	payload = append(payload, Uint32ToBytes(blockSize)...)
+	payload = append(payload, Uint32ToBytes(offset)...)
+
+	return NewCommand(OpcodeFlashDeflBegin, payload)
+}
+
 func calculateChecksum(data []byte) []byte {
 	state := uint32(0xEF)
 
@@ -106,6 +115,20 @@ func NewFlashDataCommand(data []byte, sequence uint32) *Command {
 	payload = append(payload, data...)
 
 	cmd := NewCommand(OpcodeFlashData, payload)
+	cmd.Checksum = checksum
+
+	return cmd
+}
+
+func NewFlashDataDeflCommand(data []byte, sequence uint32) *Command {
+	checksum := calculateChecksum(data)
+	payload := Uint32ToBytes(uint32(len(data)))
+	payload = append(payload, Uint32ToBytes(sequence)...)
+	payload = append(payload, Uint32ToBytes(0)...)
+	payload = append(payload, Uint32ToBytes(0)...)
+	payload = append(payload, data...)
+
+	cmd := NewCommand(OpcodeFlashDeflData, payload)
 	cmd.Checksum = checksum
 
 	return cmd
